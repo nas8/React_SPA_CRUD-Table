@@ -1,11 +1,12 @@
 import { createSlice } from '@reduxjs/toolkit';
+import { TABLE_DATA_API } from '../api/table-data';
 
 interface RootState {
   tableSlice: tableSliceState;
 }
 
 interface tableSliceState {
-  current_user: string;
+  token: string | null;
   error_code: number;
   error_message: string;
   data: Data | [];
@@ -28,7 +29,7 @@ interface Data {
 }
 
 const initialState: tableSliceState = {
-  current_user: '',
+  token: null,
   error_code: 0,
   error_message: 'OK',
   data: [],
@@ -38,14 +39,19 @@ export const tableSlice = createSlice({
   name: 'table',
   initialState,
   reducers: {
-    setIsAuthorized: (state, action) => {
-      state.current_user = action.payload;
+    setToken(state, action) {
+      state.token = action.payload;
     },
+  },
+  extraReducers: (builder) => {
+    builder.addMatcher(TABLE_DATA_API.tableData.matchFulfilled, (state, { payload }) => {
+      console.log(payload);
+    });
   },
 });
 
-export const { setIsAuthorized } = tableSlice.actions;
+export const { setToken } = tableSlice.actions;
 
-export const selectIsAuthorized = (state: RootState) => state.tableSlice.current_user;
+export const selectToken = (state: RootState) => state.tableSlice.token;
 
 export default tableSlice.reducer;

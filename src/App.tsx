@@ -3,7 +3,7 @@ import { Route, Routes, useNavigate } from 'react-router-dom';
 import './App.css';
 import { LoginPage } from './pages/LoginPage/LoginPage';
 
-import { TablePage } from './pages/TablePage/TablePage';
+import { DashboardPage } from './pages/DashboardPage/DashboardPage';
 import { AuthContext } from './context/AuthContext';
 
 function App() {
@@ -11,7 +11,7 @@ function App() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (isAuth || localStorage.getItem('token')) {
+    if (localStorage.getItem('token')) {
       setIsAuth(true);
       navigate('dashboard');
       return;
@@ -25,7 +25,7 @@ function App() {
       <div className="App">
         <Routes>
           <Route index path="/" element={<LoginPage />} />
-          <Route path="dashboard" element={<TablePage />} />
+          <Route path="dashboard" element={<DashboardPage />} />
         </Routes>
       </div>
     </AuthContext.Provider>

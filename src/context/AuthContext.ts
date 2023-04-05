@@ -1,8 +1,8 @@
 import { createContext } from 'react';
 
 interface AuthContext {
-  user: string;
-  setUser: (user: string) => void;
+  isAuthor: boolean;
+  setIsAuthor: (isAuthor: boolean) => void;
 }
 
 export const AuthContext = createContext<any>({});

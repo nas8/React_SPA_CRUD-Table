@@ -1,10 +1,10 @@
-import { useContext, useEffect } from 'react';
-import EnhancedTable from './components/Table/Table';
+import { HeaderInner, StyledHeader } from './Header.styled';
 import { Button } from '@mui/joy';
+import { useContext, useEffect } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-export const TablePage = () => {
+const Header = () => {
   const { isAuth, setIsAuth } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -21,11 +21,13 @@ export const TablePage = () => {
   };
 
   return (
-    <>
-      <EnhancedTable />
-      <Button type="submit" onClick={handleSubmit}>
-        Log Out
-      </Button>
-    </>
+    <StyledHeader>
+      <HeaderInner>
+        <p style={{ color: 'white', fontWeight: '700' }}>Pryaniky.com</p>
+        <Button onClick={handleSubmit}>Log Out</Button>
+      </HeaderInner>
+    </StyledHeader>
   );
 };
+
+export default Header;
