@@ -15,26 +15,27 @@ export const LoginPage = () => {
 
   const [login, { isError, isLoading }] = LOGIN_API.login.useMutation({});
 
-  const handleSubmit = async () => {
-    if (username && password) {
-      const response = await login({ username, password });
-      const { data }: any = response;
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+    // if (username && password) {
+    const response = await login({ username, password });
+    const { data }: any = response;
 
-      if (data.error_code === 0) {
-        setIsAccessDenied(false);
-        localStorage.setItem('token', data.data.token);
-        dispatch(setToken(data.data.token));
-        setIsAuth(true);
-        return;
-      }
-
-      setIsAccessDenied(true);
+    if (data.error_code === 0) {
+      setIsAccessDenied(false);
+      localStorage.setItem('token', data.data.token);
+      dispatch(setToken(data.data.token));
+      setIsAuth(true);
+      return;
     }
+
+    setIsAccessDenied(true);
+    // }
   };
 
   return (
     <div>
-      <StyledForm>
+      <StyledForm onSubmit={handleSubmit}>
         <div>
           <div style={{ marginBottom: '10px' }}>Username:</div>
           <Input
@@ -62,7 +63,7 @@ export const LoginPage = () => {
             required
           />
         </div>
-        <Button type="submit" loading={isLoading} onClick={handleSubmit}>
+        <Button type="submit" loading={isLoading}>
           Login
         </Button>
         {isError && <ErrorWrapper>Server error</ErrorWrapper>}

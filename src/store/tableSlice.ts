@@ -10,7 +10,7 @@ interface tableSliceState {
   tableData: Row[] | [];
 }
 
-interface Row {
+export interface Row {
   id: string | number;
   documentStatus: string;
   employeeNumber: string;
@@ -41,10 +41,10 @@ export const tableSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder.addMatcher(TABLE_DATA_API.tableData.matchPending, (state, { payload }) => {
+    builder.addMatcher(TABLE_DATA_API.getTableData.matchPending, (state, { payload }) => {
       state.requestStatus = RequestStatus.LOADING;
     });
-    builder.addMatcher(TABLE_DATA_API.tableData.matchFulfilled, (state, { payload }) => {
+    builder.addMatcher(TABLE_DATA_API.getTableData.matchFulfilled, (state, { payload }) => {
       const { data }: Data = payload;
 
       const formattedData = data.map((row: Row, index) => {
@@ -59,8 +59,17 @@ export const tableSlice = createSlice({
       state.tableData = [...formattedData];
       state.requestStatus = RequestStatus.SUCCESS;
     });
-    builder.addMatcher(TABLE_DATA_API.tableData.matchRejected, (state, { payload }) => {
+    builder.addMatcher(TABLE_DATA_API.getTableData.matchRejected, (state, { payload }) => {
       state.requestStatus = RequestStatus.ERROR;
+    });
+    builder.addMatcher(TABLE_DATA_API.postTableData.matchFulfilled, (state, { payload }) => {
+      const { data }: Data = payload;
+      const newRow: any = { ...data };
+      newRow.id = state.tableData.length + 1;
+      newRow.companySigDate = formatISODate(newRow.companySigDate);
+      newRow.employeeSigDate = formatISODate(newRow.employeeSigDate);
+
+      state.tableData = [newRow, ...state.tableData];
     });
   },
 });

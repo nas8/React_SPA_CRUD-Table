@@ -1,18 +1,7 @@
 import { useMemo } from 'react';
 import { useTable, Column, usePagination, useSortBy } from 'react-table';
 import { Styles } from './Table.styled';
-
-interface Row {
-  id: string | number;
-  documentStatus: string;
-  employeeNumber: string;
-  documentType: string;
-  documentName: string;
-  companySignatureName: string;
-  employeeSignatureName: string;
-  employeeSigDate: string;
-  companySigDate: string;
-}
+import { Row } from '../../../../store/tableSlice';
 
 interface TableProps {
   data: Row[];

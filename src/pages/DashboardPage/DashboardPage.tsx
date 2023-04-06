@@ -4,6 +4,8 @@ import { Layout } from '../../ui/Layout/Layout';
 import { Table } from './components/Table/Table';
 import { useSelector } from 'react-redux';
 import { selectTableData } from '../../store/tableSlice';
+import { Button } from '@mui/joy';
+import { BasicModal } from '../../ui/BasicModal/BasicModal';
 
 const mocks = [
   {
@@ -54,7 +56,11 @@ const mocks = [
 
 export const DashboardPage = () => {
   const token = localStorage.getItem('token');
-  const [getData] = TABLE_DATA_API.tableData.useLazyQuery();
+  const [getData] = TABLE_DATA_API.getTableData.useLazyQuery();
+
+  const [isOpen, setIsOpen] = useState(false);
+  const handleOpen = () => setIsOpen(true);
+  const handleClose = () => setIsOpen(false);
 
   const { requestStatus, tableData } = useSelector(selectTableData);
 
@@ -65,8 +71,16 @@ export const DashboardPage = () => {
   }, [token, getData]);
 
   return (
-    <Layout>
-      <Table data={tableData} />
-    </Layout>
+    <>
+      <Layout>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <Button onClick={handleOpen} style={{ width: '100px', alignSelf: 'flex-end' }}>
+            Add+
+          </Button>
+          <Table data={tableData} />
+        </div>
+      </Layout>
+      <BasicModal isOpen={isOpen} handleClose={handleClose} />
+    </>
   );
 };

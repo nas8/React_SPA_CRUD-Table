@@ -2,7 +2,7 @@ import { tableDataApi } from '../tableDataApi';
 
 export default tableDataApi.injectEndpoints({
   endpoints: (build) => ({
-    tableData: build.query({
+    getTableData: build.query({
       query: (token: string | null) => {
         return {
           url: `/ru/data/v3/testmethods/docs/userdocs/get`,
