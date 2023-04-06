@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { TABLE_DATA_API } from '../../api/table-data';
 import { Layout } from '../../ui/Layout/Layout';
 import { Table } from './components/Table/Table';
+import { useSelector } from 'react-redux';
+import { selectTableData } from '../../store/tableSlice';
 
 const mocks = [
   {
@@ -52,26 +54,19 @@ const mocks = [
 
 export const DashboardPage = () => {
   const token = localStorage.getItem('token');
-  const [getData, { isLoading, isError }] = TABLE_DATA_API.tableData.useLazyQuery();
-  const [data, setData] = useState([]);
+  const [getData] = TABLE_DATA_API.tableData.useLazyQuery();
+
+  const { requestStatus, tableData } = useSelector(selectTableData);
 
   useEffect(() => {
     if (token) {
-      const fetchData = async () => {
-        const response = await getData(token);
-        const { data } = response.data;
-        setData(data);
-      };
-
-      fetchData();
+      getData(token);
     }
   }, [token, getData]);
 
   return (
     <Layout>
-      {isLoading && <div>Loading...</div>}
-      {isError && <div>Error</div>}
-      {!isLoading && !isError && <Table data={data} />}
+      <Table data={tableData} />
     </Layout>
   );
 };

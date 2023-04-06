@@ -2,8 +2,8 @@ import { useMemo } from 'react';
 import { useTable, Column, usePagination, useSortBy } from 'react-table';
 import { Styles } from './Table.styled';
 
-interface Data {
-  id: string;
+interface Row {
+  id: string | number;
   documentStatus: string;
   employeeNumber: string;
   documentType: string;
@@ -15,14 +15,14 @@ interface Data {
 }
 
 interface TableProps {
-  data: Data[];
+  data: Row[];
 }
 
 export const Table: React.FC<TableProps> = ({ data = [] }) => {
-  const columns = useMemo<Column<Data>[]>(
+  const columns = useMemo<Column<Row>[]>(
     () => [
       {
-        Header: 'Id',
+        Header: '№',
         accessor: 'id',
       },
       {

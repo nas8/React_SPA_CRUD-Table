@@ -1,19 +1,17 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { TABLE_DATA_API } from '../api/table-data';
-
-interface RootState {
-  tableSlice: tableSliceState;
-}
+import type { RootState } from './store';
+import { RequestStatus } from '../types/requestStatuses';
+import { formatISODate } from '../utils/formatISODate';
 
 interface tableSliceState {
   token: string | null;
-  error_code: number;
-  error_message: string;
-  data: Data | [];
+  requestStatus: string;
+  tableData: Row[] | [];
 }
 
 interface Row {
-  id: string;
+  id: string | number;
   documentStatus: string;
   employeeNumber: string;
   documentType: string;
@@ -30,9 +28,8 @@ interface Data {
 
 const initialState: tableSliceState = {
   token: null,
-  error_code: 0,
-  error_message: 'OK',
-  data: [],
+  requestStatus: RequestStatus.IDLE,
+  tableData: [],
 };
 
 export const tableSlice = createSlice({
@@ -44,8 +41,26 @@ export const tableSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
+    builder.addMatcher(TABLE_DATA_API.tableData.matchPending, (state, { payload }) => {
+      state.requestStatus = RequestStatus.LOADING;
+    });
     builder.addMatcher(TABLE_DATA_API.tableData.matchFulfilled, (state, { payload }) => {
-      console.log(payload);
+      const { data }: Data = payload;
+
+      const formattedData = data.map((row: Row, index) => {
+        const newRow = { ...row };
+        newRow.id = index + 1;
+        newRow.companySigDate = formatISODate(row.companySigDate);
+        newRow.employeeSigDate = formatISODate(row.employeeSigDate);
+
+        return newRow;
+      });
+
+      state.tableData = [...state.tableData, ...formattedData];
+      state.requestStatus = RequestStatus.SUCCESS;
+    });
+    builder.addMatcher(TABLE_DATA_API.tableData.matchRejected, (state, { payload }) => {
+      state.requestStatus = RequestStatus.ERROR;
     });
   },
 });
@@ -53,5 +68,6 @@ export const tableSlice = createSlice({
 export const { setToken } = tableSlice.actions;
 
 export const selectToken = (state: RootState) => state.tableSlice.token;
+export const selectTableData = (state: RootState) => state.tableSlice;
 
 export default tableSlice.reducer;
