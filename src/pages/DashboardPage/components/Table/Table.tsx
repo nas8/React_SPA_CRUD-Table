@@ -2,17 +2,32 @@ import { useMemo } from 'react';
 import { useTable, Column, usePagination, useSortBy } from 'react-table';
 import { Styles } from './Table.styled';
 import { Row } from '../../../../store/tableSlice';
+import { TABLE_DATA_API } from '../../../../api/table-data';
 
 interface TableProps {
   data: Row[];
 }
 
 export const Table: React.FC<TableProps> = ({ data = [] }) => {
-  const columns = useMemo<Column<Row>[]>(
+  const [deleteItem] = TABLE_DATA_API.deleteTableData.useMutation();
+  const token = localStorage.getItem('token');
+
+  const handleDelete = (row: any) => {
+    const { id } = row.original;
+
+    const deleteData = {
+      id: id,
+      token: token,
+    };
+
+    deleteItem(deleteData);
+  };
+
+  const columns = useMemo<any>(
     () => [
       {
         Header: '№',
-        accessor: 'id',
+        accessor: 'rowNumber',
       },
       {
         Header: 'Document status',
@@ -45,6 +60,11 @@ export const Table: React.FC<TableProps> = ({ data = [] }) => {
       {
         Header: 'Company date',
         accessor: 'companySigDate',
+      },
+      {
+        Header: 'Edit Row',
+        accessor: 'edit',
+        Cell: ({ row }: { row: any }) => <button onClick={() => handleDelete(row)}>Delete</button>,
       },
     ],
     [],

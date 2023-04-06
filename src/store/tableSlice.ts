@@ -11,7 +11,8 @@ interface tableSliceState {
 }
 
 export interface Row {
-  id: string | number;
+  rowNumber: number;
+  id: string;
   documentStatus: string;
   employeeNumber: string;
   documentType: string;
@@ -39,8 +40,10 @@ export const tableSlice = createSlice({
     setToken(state, action) {
       state.token = action.payload;
     },
+    deleteItem(state, action) {},
   },
   extraReducers: (builder) => {
+    //GET DATA
     builder.addMatcher(TABLE_DATA_API.getTableData.matchPending, (state, { payload }) => {
       state.requestStatus = RequestStatus.LOADING;
     });
@@ -49,7 +52,7 @@ export const tableSlice = createSlice({
 
       const formattedData = data.map((row: Row, index) => {
         const newRow = { ...row };
-        newRow.id = index + 1;
+        newRow.rowNumber = index + 1;
         newRow.companySigDate = formatISODate(row.companySigDate);
         newRow.employeeSigDate = formatISODate(row.employeeSigDate);
 
@@ -62,15 +65,41 @@ export const tableSlice = createSlice({
     builder.addMatcher(TABLE_DATA_API.getTableData.matchRejected, (state, { payload }) => {
       state.requestStatus = RequestStatus.ERROR;
     });
+    //POST ITEM
+    builder.addMatcher(TABLE_DATA_API.postTableData.matchPending, (state, { payload }) => {});
     builder.addMatcher(TABLE_DATA_API.postTableData.matchFulfilled, (state, { payload }) => {
       const { data }: Data = payload;
       const newRow: any = { ...data };
-      newRow.id = state.tableData.length + 1;
+      newRow.rowNumber = state.tableData.length + 1;
       newRow.companySigDate = formatISODate(newRow.companySigDate);
       newRow.employeeSigDate = formatISODate(newRow.employeeSigDate);
 
       state.tableData = [newRow, ...state.tableData];
     });
+    builder.addMatcher(TABLE_DATA_API.postTableData.matchRejected, (state, { payload }) => {});
+    //DELETE ITEM
+    builder.addMatcher(TABLE_DATA_API.deleteTableData.matchPending, (state, { payload }) => {});
+    builder.addMatcher(TABLE_DATA_API.deleteTableData.matchFulfilled, (state, { meta }) => {
+      const { id } = meta.arg.originalArgs;
+      const filteredData = state.tableData.filter((item) => item.id !== id);
+      // const formattedData = filteredData.map((row: Row, index) => {
+      //   const newRow = { ...row };
+      //   newRow.rowNumber = index + 1;
+      //   return newRow;
+      // });
+
+      state.tableData = [...filteredData];
+    });
+    builder.addMatcher(TABLE_DATA_API.deleteTableData.matchRejected, (state, { payload }) => {});
+    //PUT ITEM
+    builder.addMatcher(TABLE_DATA_API.putTableData.matchPending, (state, { payload }) => {});
+    builder.addMatcher(TABLE_DATA_API.putTableData.matchFulfilled, (state, { meta }) => {
+      const { id } = meta.arg.originalArgs;
+      const filteredData = state.tableData.filter((item) => item.id !== id);
+
+      state.tableData = [...filteredData];
+    });
+    builder.addMatcher(TABLE_DATA_API.putTableData.matchRejected, (state, { payload }) => {});
   },
 });
 

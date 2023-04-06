@@ -17,7 +17,6 @@ export const LoginPage = () => {
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-    // if (username && password) {
     const response = await login({ username, password });
     const { data }: any = response;
 
@@ -30,7 +29,6 @@ export const LoginPage = () => {
     }
 
     setIsAccessDenied(true);
-    // }
   };
 
   return (

@@ -9,7 +9,7 @@ export const Styles = styled.div`
     box-sizing: border-box;
     border-spacing: 0;
     border-radius: 10px;
-    box-shadow: 4px 4px 8px 0px rgba(34, 60, 80, 0.2);
+    box-shadow: 0px 1px 10px 8px rgba(34, 60, 80, 0.2);
     width: 1000px;
     min-height: 100px;
 
