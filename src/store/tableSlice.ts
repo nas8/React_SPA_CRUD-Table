@@ -52,7 +52,9 @@ export const tableSlice = createSlice({
 
       const formattedData = data.map((row: Row, index) => {
         const newRow = { ...row };
+
         newRow.rowNumber = index + 1;
+
         newRow.companySigDate = formatISODate(row.companySigDate);
         newRow.employeeSigDate = formatISODate(row.employeeSigDate);
 
@@ -93,11 +95,21 @@ export const tableSlice = createSlice({
     builder.addMatcher(TABLE_DATA_API.deleteTableData.matchRejected, (state, { payload }) => {});
     //PUT ITEM
     builder.addMatcher(TABLE_DATA_API.putTableData.matchPending, (state, { payload }) => {});
-    builder.addMatcher(TABLE_DATA_API.putTableData.matchFulfilled, (state, { meta }) => {
-      const { id } = meta.arg.originalArgs;
-      const filteredData = state.tableData.filter((item) => item.id !== id);
+    builder.addMatcher(TABLE_DATA_API.putTableData.matchFulfilled, (state, { payload }) => {
+      const { data }: any = payload;
+      const updatedData = state.tableData.map((item) => {
+        if (item.id === data.id) {
+          const updatedItem = { ...data };
+          updatedItem.companySigDate = formatISODate(data.companySigDate);
+          updatedItem.employeeSigDate = formatISODate(data.employeeSigDate);
+          updatedItem.rowNumber = item.rowNumber;
 
-      state.tableData = [...filteredData];
+          return updatedItem;
+        }
+        return item;
+      });
+
+      state.tableData = [...updatedData];
     });
     builder.addMatcher(TABLE_DATA_API.putTableData.matchRejected, (state, { payload }) => {});
   },

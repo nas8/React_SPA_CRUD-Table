@@ -1,9 +1,9 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useTable, Column, usePagination, useSortBy } from 'react-table';
 import { Styles } from './Table.styled';
 import { Row } from '../../../../store/tableSlice';
 import { TABLE_DATA_API } from '../../../../api/table-data';
-
+import { BasicModal, ModalMode } from '../../../../ui/BasicModal/BasicModal';
 interface TableProps {
   data: Row[];
 }
@@ -11,6 +11,10 @@ interface TableProps {
 export const Table: React.FC<TableProps> = ({ data = [] }) => {
   const [deleteItem] = TABLE_DATA_API.deleteTableData.useMutation();
   const token = localStorage.getItem('token');
+  const [isOpen, setIsOpen] = useState(false);
+  const handleClose = () => setIsOpen(false);
+  const [editableRows, setEditableRows] = useState<number[]>([]);
+  const [editableValues, setEditableValues] = useState<Row | null>(null);
 
   const handleDelete = (row: any) => {
     const { id } = row.original;
@@ -21,6 +25,23 @@ export const Table: React.FC<TableProps> = ({ data = [] }) => {
     };
 
     deleteItem(deleteData);
+  };
+
+  const handleEdit = (row: any) => {
+    const { rowNumber } = row.original;
+    setEditableRows((prevState) => [...prevState, rowNumber]);
+
+    setEditableValues({ ...row.original });
+    setIsOpen(true);
+  };
+
+  const renderOptions = (row: any) => {
+    return (
+      <div style={{ display: 'flex', gap: '5px' }}>
+        <button onClick={() => handleDelete(row)}>Delete</button>
+        <button onClick={() => handleEdit(row)}>Edit</button>
+      </div>
+    );
   };
 
   const columns = useMemo<any>(
@@ -64,10 +85,10 @@ export const Table: React.FC<TableProps> = ({ data = [] }) => {
       {
         Header: 'Edit Row',
         accessor: 'edit',
-        Cell: ({ row }: { row: any }) => <button onClick={() => handleDelete(row)}>Delete</button>,
+        Cell: ({ row }: { row: any }) => renderOptions(row),
       },
     ],
-    [],
+    [editableRows],
   );
 
   const {
@@ -96,76 +117,87 @@ export const Table: React.FC<TableProps> = ({ data = [] }) => {
   );
 
   return (
-    <Styles>
-      <table {...getTableProps()}>
-        <thead>
-          {headerGroups.map((headerGroup) => (
-            <tr {...headerGroup.getHeaderGroupProps()}>
-              {headerGroup.headers.map((column) => (
-                <th {...column.getHeaderProps(column.getSortByToggleProps())}>
-                  {column.render('Header')}
-                  <span>{column.isSorted ? (column.isSortedDesc ? ' ⬇' : ' ⬆') : ''}</span>
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody {...getTableBodyProps()}>
-          {page.map((row: any, i: number) => {
-            prepareRow(row);
-            return (
-              <tr {...row.getRowProps()}>
-                {row.cells.map((cell: any) => {
-                  return <td {...cell.getCellProps()}>{cell.render('Cell')}</td>;
-                })}
+    <>
+      <Styles>
+        <table {...getTableProps()}>
+          <thead>
+            {headerGroups.map((headerGroup) => (
+              <tr {...headerGroup.getHeaderGroupProps()}>
+                {headerGroup.headers.map((column) => (
+                  <th {...column.getHeaderProps(column.getSortByToggleProps())}>
+                    {column.render('Header')}
+                    <span>{column.isSorted ? (column.isSortedDesc ? ' ⬇' : ' ⬆') : ''}</span>
+                  </th>
+                ))}
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
-      <div className="pagination">
-        <button onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
-          {'<<'}
-        </button>{' '}
-        <button onClick={() => previousPage()} disabled={!canPreviousPage}>
-          {'<'}
-        </button>{' '}
-        <button onClick={() => nextPage()} disabled={!canNextPage}>
-          {'>'}
-        </button>{' '}
-        <button onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage}>
-          {'>>'}
-        </button>{' '}
-        <span>
-          Page{' '}
-          <strong>
-            {pageIndex + 1} of {pageOptions.length}
-          </strong>{' '}
-        </span>
-        <span>
-          | Go to page:{' '}
-          <input
-            type="number"
-            defaultValue={pageIndex + 1}
+            ))}
+          </thead>
+          <tbody {...getTableBodyProps()}>
+            {page.map((row: any, i: number) => {
+              prepareRow(row);
+              return (
+                <tr {...row.getRowProps()}>
+                  {row.cells.map((cell: any) => {
+                    return <td {...cell.getCellProps()}>{cell.render('Cell')}</td>;
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        <div className="pagination">
+          <button onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
+            {'<<'}
+          </button>{' '}
+          <button onClick={() => previousPage()} disabled={!canPreviousPage}>
+            {'<'}
+          </button>{' '}
+          <button onClick={() => nextPage()} disabled={!canNextPage}>
+            {'>'}
+          </button>{' '}
+          <button onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage}>
+            {'>>'}
+          </button>{' '}
+          <span>
+            Page{' '}
+            <strong>
+              {pageIndex + 1} of {pageOptions.length}
+            </strong>{' '}
+          </span>
+          <span>
+            | Go to page:{' '}
+            <input
+              type="number"
+              defaultValue={pageIndex + 1}
+              onChange={(e) => {
+                const page = e.target.value ? Number(e.target.value) - 1 : 0;
+                gotoPage(page);
+              }}
+              style={{ width: '100px' }}
+            />
+          </span>{' '}
+          <select
+            value={pageSize}
             onChange={(e) => {
-              const page = e.target.value ? Number(e.target.value) - 1 : 0;
-              gotoPage(page);
-            }}
-            style={{ width: '100px' }}
-          />
-        </span>{' '}
-        <select
-          value={pageSize}
-          onChange={(e) => {
-            setPageSize(Number(e.target.value));
-          }}>
-          {[10, 20, 30, 40, 50].map((pageSize) => (
-            <option key={pageSize} value={pageSize}>
-              Show {pageSize}
-            </option>
-          ))}
-        </select>
-      </div>
-    </Styles>
+              setPageSize(Number(e.target.value));
+            }}>
+            {[10, 20, 30, 40, 50].map((pageSize) => (
+              <option key={pageSize} value={pageSize}>
+                Show {pageSize}
+              </option>
+            ))}
+          </select>
+        </div>
+      </Styles>
+      {editableValues && (
+        <BasicModal
+          isOpen={isOpen}
+          handleClose={handleClose}
+          mode={ModalMode.edit}
+          values={editableValues}
+          id={editableValues.id}
+        />
+      )}
+    </>
   );
 };

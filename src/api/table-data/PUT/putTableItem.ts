@@ -10,6 +10,7 @@ export default tableDataApi.injectEndpoints({
           'Content-Type': 'application/json',
           'x-auth': `${data.token}`,
         },
+        body: data.item,
       }),
     }),
   }),

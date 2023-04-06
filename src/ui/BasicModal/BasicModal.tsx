@@ -20,6 +20,9 @@ const style = {
 interface ModalProps {
   isOpen: boolean;
   handleClose: () => void;
+  mode: ModalMode;
+  values?: Row | null;
+  id?: string;
 }
 
 interface Row {
@@ -44,18 +47,30 @@ const initRowState = {
   employeeSignatureName: '',
 };
 
-export const BasicModal: React.FC<ModalProps> = ({ isOpen = false, handleClose }) => {
-  const token = localStorage.getItem('token');
-  const [postItem, { isLoading, isError }] = TABLE_DATA_API.postTableData.useMutation();
+export enum ModalMode {
+  edit = 'edit',
+  add = 'add',
+}
 
-  const [documentStatus, setDocumentStatus] = useState('');
-  const [employeeNumber, setEmployeeNumber] = useState('');
-  const [documentType, setDocumentType] = useState('');
-  const [documentName, setDocumentName] = useState('');
-  const [companyName, setCompanyName] = useState('');
-  const [employeeName, setEmployeeName] = useState('');
-  const [employeeDate, setEmployeeDate] = useState('');
-  const [companyDate, setCompanyDate] = useState('');
+export const BasicModal: React.FC<ModalProps> = ({
+  isOpen = false,
+  handleClose,
+  mode,
+  values = initRowState,
+  id,
+}) => {
+  const token = localStorage.getItem('token');
+  const [postItem] = TABLE_DATA_API.postTableData.useMutation();
+  const [putItem] = TABLE_DATA_API.putTableData.useMutation();
+
+  const [documentStatus, setDocumentStatus] = useState(values ? values.documentStatus : '');
+  const [employeeNumber, setEmployeeNumber] = useState(values ? values.employeeNumber : '');
+  const [documentType, setDocumentType] = useState(values ? values.documentType : '');
+  const [documentName, setDocumentName] = useState(values ? values.documentName : '');
+  const [companyName, setCompanyName] = useState(values ? values.employeeSignatureName : '');
+  const [employeeName, setEmployeeName] = useState(values ? values.employeeSignatureName : '');
+  const [employeeDate, setEmployeeDate] = useState(values ? values.employeeSigDate : '');
+  const [companyDate, setCompanyDate] = useState(values ? values.companySigDate : '');
 
   const handleSubmit = (e: any) => {
     e.preventDefault();
@@ -81,9 +96,20 @@ export const BasicModal: React.FC<ModalProps> = ({ isOpen = false, handleClose }
       item: { ...newRow },
     };
 
-    console.log(isLoading);
+    const putData = {
+      token: token,
+      item: { ...newRow },
+      id: id,
+    };
 
-    postItem(postData);
+    if (mode === ModalMode.add) {
+      postItem(postData);
+    }
+
+    if (mode === ModalMode.edit) {
+      putItem(putData);
+    }
+
     handleClose();
   };
 
@@ -99,7 +125,7 @@ export const BasicModal: React.FC<ModalProps> = ({ isOpen = false, handleClose }
             onSubmit={handleSubmit}
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
             <Typography id="modal-modal-title" variant="h6" component="h2">
-              Add new row
+              {mode === ModalMode.add ? 'Add new row' : 'Edit row'}
             </Typography>
             <div
               style={{ display: 'flex', gap: '30px', flexDirection: 'column', fontSize: '14px' }}>
@@ -167,9 +193,7 @@ export const BasicModal: React.FC<ModalProps> = ({ isOpen = false, handleClose }
                   />
                 </div>
               </div>
-              <Button loading={isLoading} type="submit">
-                Submit
-              </Button>
+              <Button type="submit">Submit</Button>
             </div>
           </form>
         </Box>

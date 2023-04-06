@@ -5,7 +5,7 @@ import { Table } from './components/Table/Table';
 import { useSelector } from 'react-redux';
 import { selectTableData } from '../../store/tableSlice';
 import { Button } from '@mui/joy';
-import { BasicModal } from '../../ui/BasicModal/BasicModal';
+import { BasicModal, ModalMode } from '../../ui/BasicModal/BasicModal';
 
 const mocks = [
   {
@@ -80,7 +80,7 @@ export const DashboardPage = () => {
           <Table data={tableData} />
         </div>
       </Layout>
-      <BasicModal isOpen={isOpen} handleClose={handleClose} />
+      <BasicModal isOpen={isOpen} handleClose={handleClose} mode={ModalMode.add} />
     </>
   );
 };
