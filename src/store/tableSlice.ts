@@ -56,7 +56,7 @@ export const tableSlice = createSlice({
         return newRow;
       });
 
-      state.tableData = [...state.tableData, ...formattedData];
+      state.tableData = [...formattedData];
       state.requestStatus = RequestStatus.SUCCESS;
     });
     builder.addMatcher(TABLE_DATA_API.tableData.matchRejected, (state, { payload }) => {
