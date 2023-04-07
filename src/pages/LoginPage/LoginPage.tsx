@@ -3,15 +3,12 @@ import { StyledForm, ErrorWrapper } from './LoginPage.styled';
 import { LOGIN_API } from '../../api/login';
 import { Button, Input } from '@mui/joy';
 import { AuthContext } from '../../context/AuthContext';
-import { useDispatch } from 'react-redux';
-import { setToken } from '../../store/tableSlice';
 
 export const LoginPage = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isAccessDenied, setIsAccessDenied] = useState(false);
   const { setIsAuth } = useContext(AuthContext);
-  const dispatch = useDispatch();
 
   const [login, { isError, isLoading }] = LOGIN_API.login.useMutation({});
 
@@ -23,7 +20,6 @@ export const LoginPage = () => {
     if (data.error_code === 0) {
       setIsAccessDenied(false);
       localStorage.setItem('token', data.data.token);
-      dispatch(setToken(data.data.token));
       setIsAuth(true);
       return;
     }

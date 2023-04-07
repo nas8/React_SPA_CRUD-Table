@@ -3,7 +3,12 @@ import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
 import { Button, Input } from '@mui/joy';
 import { useState } from 'react';
-import { TABLE_DATA_API } from '../../api/table-data';
+import { TABLE_DATA_API } from '../../../../api/table-data';
+import { formatDate } from '../../../../utils/formatDate';
+import { useDispatch, useSelector } from 'react-redux';
+import { clearStatuses, selectTableData } from '../../../../store/tableSlice';
+import { RequestStatus } from '../../../../types/requestStatuses';
+import { ErrorMessage } from '../../../../ui/ErrorMessage/ErrorMessage';
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -17,12 +22,13 @@ const style = {
   p: 4,
 };
 
-interface ModalProps {
+interface AddOrEditModalProps {
   isOpen: boolean;
   handleClose: () => void;
   mode: ModalMode;
   values?: Row | null;
   id?: string;
+  rowNumber?: number;
 }
 
 interface Row {
@@ -52,12 +58,13 @@ export enum ModalMode {
   add = 'add',
 }
 
-export const BasicModal: React.FC<ModalProps> = ({
+export const AddOrEditModal: React.FC<AddOrEditModalProps> = ({
   isOpen = false,
   handleClose,
   mode,
   values = initRowState,
   id,
+  rowNumber,
 }) => {
   const token = localStorage.getItem('token');
   const [postItem] = TABLE_DATA_API.postTableData.useMutation();
@@ -69,10 +76,17 @@ export const BasicModal: React.FC<ModalProps> = ({
   const [documentName, setDocumentName] = useState(values ? values.documentName : '');
   const [companyName, setCompanyName] = useState(values ? values.employeeSignatureName : '');
   const [employeeName, setEmployeeName] = useState(values ? values.employeeSignatureName : '');
-  const [employeeDate, setEmployeeDate] = useState(values ? values.employeeSigDate : '');
-  const [companyDate, setCompanyDate] = useState(values ? values.companySigDate : '');
+  const [employeeDate, setEmployeeDate] = useState(
+    values ? formatDate(values.employeeSigDate) : '',
+  );
+  const [companyDate, setCompanyDate] = useState(values ? formatDate(values.companySigDate) : '');
 
-  const handleSubmit = (e: any) => {
+  const [showPostError, setShowPostError] = useState(false);
+  const [showPutError, setShowPutError] = useState(false);
+
+  const { postDataStatus, putDataStatus } = useSelector(selectTableData);
+
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
 
     const newRow: Row = { ...initRowState };
@@ -91,25 +105,45 @@ export const BasicModal: React.FC<ModalProps> = ({
       newRow.companySigDate = formattedCompanyDate.toISOString();
     }
 
-    const postData = {
-      token: token,
-      item: { ...newRow },
-    };
-
-    const putData = {
-      token: token,
-      item: { ...newRow },
-      id: id,
-    };
-
     if (mode === ModalMode.add) {
-      postItem(postData);
+      const postData = {
+        token: token,
+        item: { ...newRow },
+      };
+
+      const response: any = await postItem(postData);
+
+      if (response.data) {
+        closeModal();
+      }
+
+      if (response.error) {
+        setShowPostError(true);
+      }
     }
 
     if (mode === ModalMode.edit) {
-      putItem(putData);
-    }
+      const putData = {
+        token: token,
+        item: { ...newRow },
+        id: id,
+      };
 
+      const response: any = await putItem(putData);
+
+      if (response.data) {
+        closeModal();
+      }
+
+      if (response.error) {
+        setShowPutError(true);
+      }
+    }
+  };
+
+  const closeModal = () => {
+    setShowPostError(false);
+    setShowPutError(false);
     handleClose();
   };
 
@@ -117,7 +151,7 @@ export const BasicModal: React.FC<ModalProps> = ({
     <div>
       <Modal
         open={isOpen}
-        onClose={handleClose}
+        onClose={closeModal}
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description">
         <Box sx={style}>
@@ -125,7 +159,7 @@ export const BasicModal: React.FC<ModalProps> = ({
             onSubmit={handleSubmit}
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
             <Typography id="modal-modal-title" variant="h6" component="h2">
-              {mode === ModalMode.add ? 'Add new row' : 'Edit row'}
+              {mode === ModalMode.add ? 'Add new row' : `Edit row №${rowNumber}`}
             </Typography>
             <div
               style={{ display: 'flex', gap: '30px', flexDirection: 'column', fontSize: '14px' }}>
@@ -193,7 +227,16 @@ export const BasicModal: React.FC<ModalProps> = ({
                   />
                 </div>
               </div>
-              <Button type="submit">Submit</Button>
+              <Button
+                loading={
+                  postDataStatus === RequestStatus.LOADING ||
+                  putDataStatus === RequestStatus.LOADING
+                }
+                type="submit">
+                {mode === ModalMode.add ? 'Add' : 'Edit'}
+              </Button>
+              {showPostError && <ErrorMessage message="Failed to add new row, server error :(" />}
+              {showPutError && <ErrorMessage message="Failed to update row, server error :(" />}
             </div>
           </form>
         </Box>

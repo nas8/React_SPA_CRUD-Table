@@ -5,6 +5,7 @@ import { LoginPage } from './pages/LoginPage/LoginPage';
 
 import { DashboardPage } from './pages/DashboardPage/DashboardPage';
 import { AuthContext } from './context/AuthContext';
+import { PageNotFound } from './pages/PageNotFound/PageNotFound';
 
 function App() {
   const [isAuth, setIsAuth] = useState(false);
@@ -26,6 +27,7 @@ function App() {
         <Routes>
           <Route index path="/" element={<LoginPage />} />
           <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="*" element={<PageNotFound />} />
         </Routes>
       </div>
     </AuthContext.Provider>

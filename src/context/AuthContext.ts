@@ -1,6 +1,6 @@
 import { createContext } from 'react';
 
-interface AuthContext {
+interface AuthContextProps {
   isAuthor: boolean;
   setIsAuthor: (isAuthor: boolean) => void;
 }

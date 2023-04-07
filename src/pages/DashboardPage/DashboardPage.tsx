@@ -1,68 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { TABLE_DATA_API } from '../../api/table-data';
 import { Layout } from '../../ui/Layout/Layout';
 import { Table } from './components/Table/Table';
 import { useSelector } from 'react-redux';
 import { selectTableData } from '../../store/tableSlice';
-import { Button } from '@mui/joy';
-import { BasicModal, ModalMode } from '../../ui/BasicModal/BasicModal';
-
-const mocks = [
-  {
-    id: 'as',
-    documentStatus: 'as',
-    employeeNumber: 'as',
-    documentType: 'as',
-    documentName: 'as',
-    companySignatureName: 'as',
-    employeeSignatureName: 'as',
-    employeeSigDate: 'as',
-    companySigDate: 'as',
-  },
-  {
-    id: 'as',
-    documentStatus: 'as',
-    employeeNumber: 'as',
-    documentType: 'as',
-    documentName: 'as',
-    companySignatureName: 'as',
-    employeeSignatureName: 'as',
-    employeeSigDate: 'as',
-    companySigDate: 'as',
-  },
-  {
-    id: 'as',
-    documentStatus: 'as',
-    employeeNumber: 'as',
-    documentType: 'as',
-    documentName: 'as',
-    companySignatureName: 'as',
-    employeeSignatureName: 'as',
-    employeeSigDate: 'as',
-    companySigDate: 'as',
-  },
-  {
-    id: 'as',
-    documentStatus: 'as',
-    employeeNumber: 'as',
-    documentType: 'as',
-    documentName: 'as',
-    companySignatureName: 'as',
-    employeeSignatureName: 'as',
-    employeeSigDate: 'as',
-    companySigDate: 'as',
-  },
-];
+import { Loader } from '../../ui/Loader/Loader';
+import { RequestStatus } from '../../types/requestStatuses';
 
 export const DashboardPage = () => {
   const token = localStorage.getItem('token');
   const [getData] = TABLE_DATA_API.getTableData.useLazyQuery();
 
-  const [isOpen, setIsOpen] = useState(false);
-  const handleOpen = () => setIsOpen(true);
-  const handleClose = () => setIsOpen(false);
-
-  const { requestStatus, tableData } = useSelector(selectTableData);
+  const { getDataStatus, tableData } = useSelector(selectTableData);
 
   useEffect(() => {
     if (token) {
@@ -71,16 +20,14 @@ export const DashboardPage = () => {
   }, [token, getData]);
 
   return (
-    <>
-      <Layout>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <Button onClick={handleOpen} style={{ width: '100px', alignSelf: 'flex-end' }}>
-            Add+
-          </Button>
+    <Layout>
+      {getDataStatus === RequestStatus.LOADING && <Loader />}
+      {getDataStatus === RequestStatus.SUCCESS && (
+        <div style={{ display: 'flex', gap: '20px', flexDirection: 'column' }}>
           <Table data={tableData} />
         </div>
-      </Layout>
-      <BasicModal isOpen={isOpen} handleClose={handleClose} mode={ModalMode.add} />
-    </>
+      )}
+      {getDataStatus === RequestStatus.ERROR && <h3>Data loading error</h3>}
+    </Layout>
   );
 };

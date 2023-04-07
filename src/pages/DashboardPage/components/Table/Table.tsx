@@ -1,9 +1,13 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTable, Column, usePagination, useSortBy } from 'react-table';
-import { Styles } from './Table.styled';
+import { Button, Input, IconButton } from '@mui/joy';
+import { GoToPageWrapper, Pagination, StyledSelect, Styles } from './Table.styled';
 import { Row } from '../../../../store/tableSlice';
 import { TABLE_DATA_API } from '../../../../api/table-data';
-import { BasicModal, ModalMode } from '../../../../ui/BasicModal/BasicModal';
+import { AddOrEditModal, ModalMode } from '../AddOrEditModal/AddOrEditModal';
+import EditIcon from '@material-ui/icons/Edit';
+import DeleteIcon from '@material-ui/icons/Delete';
+
 interface TableProps {
   data: Row[];
 }
@@ -12,11 +16,12 @@ export const Table: React.FC<TableProps> = ({ data = [] }) => {
   const [deleteItem] = TABLE_DATA_API.deleteTableData.useMutation();
   const token = localStorage.getItem('token');
   const [isOpen, setIsOpen] = useState(false);
-  const handleClose = () => setIsOpen(false);
-  const [editableRows, setEditableRows] = useState<number[]>([]);
+  const [isAddOpen, setIsAddOpen] = useState(false);
   const [editableValues, setEditableValues] = useState<Row | null>(null);
+  const handleClose = () => setIsOpen(false);
+  const handleAddClose = () => setIsAddOpen(false);
 
-  const handleDelete = (row: any) => {
+  const handleDelete = async (row: any) => {
     const { id } = row.original;
 
     const deleteData = {
@@ -24,13 +29,12 @@ export const Table: React.FC<TableProps> = ({ data = [] }) => {
       token: token,
     };
 
-    deleteItem(deleteData);
+    await deleteItem(deleteData);
   };
 
-  const handleEdit = (row: any) => {
-    const { rowNumber } = row.original;
-    setEditableRows((prevState) => [...prevState, rowNumber]);
+  const initialSortBy = useMemo(() => [{ id: 'rowNumber', desc: false }], []);
 
+  const handleEdit = (row: any) => {
     setEditableValues({ ...row.original });
     setIsOpen(true);
   };
@@ -38,8 +42,12 @@ export const Table: React.FC<TableProps> = ({ data = [] }) => {
   const renderOptions = (row: any) => {
     return (
       <div style={{ display: 'flex', gap: '5px' }}>
-        <button onClick={() => handleDelete(row)}>Delete</button>
-        <button onClick={() => handleEdit(row)}>Edit</button>
+        <IconButton variant="plain" onClick={() => handleEdit(row)}>
+          <EditIcon />
+        </IconButton>
+        <IconButton onClick={() => handleDelete(row)} color="danger" variant="plain">
+          <DeleteIcon />
+        </IconButton>
       </div>
     );
   };
@@ -83,12 +91,13 @@ export const Table: React.FC<TableProps> = ({ data = [] }) => {
         accessor: 'companySigDate',
       },
       {
-        Header: 'Edit Row',
+        Header: 'Options',
         accessor: 'edit',
+        disableSortBy: true,
         Cell: ({ row }: { row: any }) => renderOptions(row),
       },
     ],
-    [editableRows],
+    [],
   );
 
   const {
@@ -110,7 +119,7 @@ export const Table: React.FC<TableProps> = ({ data = [] }) => {
     {
       columns,
       data,
-      initialState: { pageIndex: 0 },
+      initialState: { pageIndex: 0, sortBy: initialSortBy },
     },
     useSortBy,
     usePagination,
@@ -145,59 +154,70 @@ export const Table: React.FC<TableProps> = ({ data = [] }) => {
             })}
           </tbody>
         </table>
-        <div className="pagination">
-          <button onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
+        <Pagination>
+          <Button onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
             {'<<'}
-          </button>{' '}
-          <button onClick={() => previousPage()} disabled={!canPreviousPage}>
+          </Button>{' '}
+          <Button onClick={() => previousPage()} disabled={!canPreviousPage}>
             {'<'}
-          </button>{' '}
-          <button onClick={() => nextPage()} disabled={!canNextPage}>
+          </Button>{' '}
+          <Button onClick={() => nextPage()} disabled={!canNextPage}>
             {'>'}
-          </button>{' '}
-          <button onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage}>
+          </Button>{' '}
+          <Button onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage}>
             {'>>'}
-          </button>{' '}
+          </Button>{' '}
           <span>
             Page{' '}
             <strong>
               {pageIndex + 1} of {pageOptions.length}
             </strong>{' '}
           </span>
-          <span>
+          <GoToPageWrapper>
             | Go to page:{' '}
-            <input
+            <Input
               type="number"
               defaultValue={pageIndex + 1}
               onChange={(e) => {
                 const page = e.target.value ? Number(e.target.value) - 1 : 0;
                 gotoPage(page);
               }}
-              style={{ width: '100px' }}
+              style={{ width: '70px' }}
             />
-          </span>{' '}
-          <select
+          </GoToPageWrapper>{' '}
+          <StyledSelect
             value={pageSize}
-            onChange={(e) => {
+            onChange={(e: any) => {
+              console.log(e.target.value);
               setPageSize(Number(e.target.value));
             }}>
-            {[10, 20, 30, 40, 50].map((pageSize) => (
+            {[5, 10, 20, 30, 40, 50].map((pageSize) => (
               <option key={pageSize} value={pageSize}>
                 Show {pageSize}
               </option>
             ))}
-          </select>
-        </div>
+          </StyledSelect>
+          <Button
+            onClick={() => setIsAddOpen(true)}
+            style={{
+              height: '20px',
+              maxWidth: '80px',
+            }}>
+            Add +
+          </Button>
+        </Pagination>
       </Styles>
       {editableValues && (
-        <BasicModal
+        <AddOrEditModal
           isOpen={isOpen}
           handleClose={handleClose}
           mode={ModalMode.edit}
           values={editableValues}
           id={editableValues.id}
+          rowNumber={editableValues.rowNumber}
         />
       )}
+      <AddOrEditModal isOpen={isAddOpen} handleClose={handleAddClose} mode={ModalMode.add} />
     </>
   );
 };

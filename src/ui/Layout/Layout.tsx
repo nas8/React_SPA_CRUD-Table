@@ -1,4 +1,5 @@
 import Header from '../Header/Header';
+import { StyledLayout } from './Layout.styled';
 
 interface LayoutProps {
   children: any;
@@ -6,9 +7,9 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
+    <StyledLayout>
       <Header />
       <div style={{ marginTop: '40px' }}>{children}</div>
-    </div>
+    </StyledLayout>
   );
 };
