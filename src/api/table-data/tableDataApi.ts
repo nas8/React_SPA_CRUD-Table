@@ -14,6 +14,8 @@ export interface IResponseItem {
   companySigDate: string;
 }
 
+export interface IResponseItemWithoutId extends Omit<IResponseItem, 'id'> {}
+
 export const tableDataApi = createApi({
   reducerPath: reducerLabels.DATA_TABLE_API,
   baseQuery: fetchBaseQuery({ baseUrl: 'https://test.v5.pryaniky.com' }),

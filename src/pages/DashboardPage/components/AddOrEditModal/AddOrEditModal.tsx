@@ -55,7 +55,7 @@ export const AddOrEditModal: React.FC<AddOrEditModalProps> = ({
   values = initValuesState,
 }) => {
   const token = localStorage.getItem('token');
-  const [postItem, { isLoading: putLoading }] = TABLE_DATA_API.postTableData.useMutation();
+  const [postItem] = TABLE_DATA_API.postTableData.useMutation();
   const [putItem] = TABLE_DATA_API.putTableData.useMutation();
 
   const [documentStatus, setDocumentStatus] = useState('');
@@ -114,6 +114,14 @@ export const AddOrEditModal: React.FC<AddOrEditModalProps> = ({
 
       if (response.data) {
         closeModal();
+        setDocumentStatus('');
+        setEmployeeNumber('');
+        setDocumentType('');
+        setDocumentName('');
+        setCompanyName('');
+        setEmployeeName('');
+        setEmployeeDate('');
+        setCompanyDate('');
       }
 
       if (response.error) {
