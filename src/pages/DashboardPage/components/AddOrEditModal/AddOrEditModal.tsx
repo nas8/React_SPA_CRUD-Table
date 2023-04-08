@@ -2,13 +2,14 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
 import { Button, Input } from '@mui/joy';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { TABLE_DATA_API } from '../../../../api/table-data';
 import { formatDate } from '../../../../utils/formatDate';
-import { useDispatch, useSelector } from 'react-redux';
-import { clearStatuses, selectTableData } from '../../../../store/tableSlice';
+import { useSelector } from 'react-redux';
+import { selectTableData } from '../../../../store/tableSlice';
 import { RequestStatus } from '../../../../types/requestStatuses';
 import { ErrorMessage } from '../../../../ui/ErrorMessage/ErrorMessage';
+import { NumberedItem } from '../../../../store/tableSlice';
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -26,23 +27,10 @@ interface AddOrEditModalProps {
   isOpen: boolean;
   handleClose: () => void;
   mode: ModalMode;
-  values?: Row | null;
-  id?: string;
-  rowNumber?: number;
+  values?: NumberedItem;
 }
 
-interface Row {
-  companySigDate: string;
-  companySignatureName: string;
-  documentName: string;
-  documentStatus: string;
-  documentType: string;
-  employeeNumber: string;
-  employeeSigDate: string;
-  employeeSignatureName: string;
-}
-
-const initRowState = {
+const initValuesState = {
   companySigDate: '',
   companySignatureName: '',
   documentName: '',
@@ -51,6 +39,8 @@ const initRowState = {
   employeeNumber: '',
   employeeSigDate: '',
   employeeSignatureName: '',
+  id: '',
+  rowNumber: 0,
 };
 
 export enum ModalMode {
@@ -62,34 +52,43 @@ export const AddOrEditModal: React.FC<AddOrEditModalProps> = ({
   isOpen = false,
   handleClose,
   mode,
-  values = initRowState,
-  id,
-  rowNumber,
+  values = initValuesState,
 }) => {
   const token = localStorage.getItem('token');
-  const [postItem] = TABLE_DATA_API.postTableData.useMutation();
+  const [postItem, { isLoading: putLoading }] = TABLE_DATA_API.postTableData.useMutation();
   const [putItem] = TABLE_DATA_API.putTableData.useMutation();
 
-  const [documentStatus, setDocumentStatus] = useState(values ? values.documentStatus : '');
-  const [employeeNumber, setEmployeeNumber] = useState(values ? values.employeeNumber : '');
-  const [documentType, setDocumentType] = useState(values ? values.documentType : '');
-  const [documentName, setDocumentName] = useState(values ? values.documentName : '');
-  const [companyName, setCompanyName] = useState(values ? values.employeeSignatureName : '');
-  const [employeeName, setEmployeeName] = useState(values ? values.employeeSignatureName : '');
-  const [employeeDate, setEmployeeDate] = useState(
-    values ? formatDate(values.employeeSigDate) : '',
-  );
-  const [companyDate, setCompanyDate] = useState(values ? formatDate(values.companySigDate) : '');
+  const [documentStatus, setDocumentStatus] = useState('');
+  const [employeeNumber, setEmployeeNumber] = useState('');
+  const [documentType, setDocumentType] = useState('');
+  const [documentName, setDocumentName] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [employeeName, setEmployeeName] = useState('');
+  const [employeeDate, setEmployeeDate] = useState('');
+  const [companyDate, setCompanyDate] = useState('');
 
   const [showPostError, setShowPostError] = useState(false);
   const [showPutError, setShowPutError] = useState(false);
 
   const { postDataStatus, putDataStatus } = useSelector(selectTableData);
 
+  useEffect(() => {
+    if (values) {
+      setDocumentStatus(values.documentStatus);
+      setEmployeeNumber(values.employeeNumber);
+      setDocumentType(values.documentType);
+      setDocumentName(values.documentName);
+      setCompanyName(values.companySignatureName);
+      setEmployeeName(values.employeeSignatureName);
+      setEmployeeDate(formatDate(values.employeeSigDate));
+      setCompanyDate(formatDate(values.companySigDate));
+    }
+  }, [values]);
+
   const handleSubmit = async (e: any) => {
     e.preventDefault();
 
-    const newRow: Row = { ...initRowState };
+    const { id, rowNumber, ...newRow } = initValuesState;
 
     newRow.documentStatus = documentStatus;
     newRow.employeeNumber = employeeNumber;
@@ -126,7 +125,7 @@ export const AddOrEditModal: React.FC<AddOrEditModalProps> = ({
       const putData = {
         token: token,
         item: { ...newRow },
-        id: id,
+        id: values.id,
       };
 
       const response: any = await putItem(putData);
@@ -158,8 +157,8 @@ export const AddOrEditModal: React.FC<AddOrEditModalProps> = ({
           <form
             onSubmit={handleSubmit}
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-            <Typography id="modal-modal-title" variant="h6" component="h2">
-              {mode === ModalMode.add ? 'Add new row' : `Edit row №${rowNumber}`}
+            <Typography id="modal-modal-title" variant="h5" component="h2">
+              {mode === ModalMode.add ? 'Add new row' : `Edit row №${values.rowNumber}`}
             </Typography>
             <div
               style={{ display: 'flex', gap: '30px', flexDirection: 'column', fontSize: '14px' }}>

@@ -1,42 +1,39 @@
 import { useMemo, useState } from 'react';
-import { useTable, Column, usePagination, useSortBy } from 'react-table';
+import { useTable, Column, usePagination, useSortBy, Cell, Row } from 'react-table';
 import { Button, Input, IconButton } from '@mui/joy';
-import { GoToPageWrapper, Pagination, StyledSelect, Styles } from './Table.styled';
-import { Row } from '../../../../store/tableSlice';
+import { GoToPageWrapper, OptionsWrapper, StyledSelect, Styles } from './Table.styled';
+import { NumberedItem } from '../../../../store/tableSlice';
 import { TABLE_DATA_API } from '../../../../api/table-data';
 import { AddOrEditModal, ModalMode } from '../AddOrEditModal/AddOrEditModal';
 import EditIcon from '@material-ui/icons/Edit';
 import DeleteIcon from '@material-ui/icons/Delete';
 
 interface TableProps {
-  data: Row[];
+  data: NumberedItem[];
 }
 
 export const Table: React.FC<TableProps> = ({ data = [] }) => {
-  const [deleteItem] = TABLE_DATA_API.deleteTableData.useMutation();
   const token = localStorage.getItem('token');
-  const [isOpen, setIsOpen] = useState(false);
-  const [isAddOpen, setIsAddOpen] = useState(false);
-  const [editableValues, setEditableValues] = useState<Row | null>(null);
-  const handleClose = () => setIsOpen(false);
-  const handleAddClose = () => setIsAddOpen(false);
+  const [deleteItem] = TABLE_DATA_API.deleteTableData.useMutation();
+
+  const [editableValues, setEditableValues] = useState<NumberedItem | null>(null);
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const handleEditModalClose = () => setIsEditModalOpen(false);
+  const handleAddModalClose = () => setIsAddModalOpen(false);
 
   const handleDelete = async (row: any) => {
     const { id } = row.original;
 
-    const deleteData = {
-      id: id,
-      token: token,
-    };
-
-    await deleteItem(deleteData);
+    await deleteItem({ id: id, token: token });
   };
 
   const initialSortBy = useMemo(() => [{ id: 'rowNumber', desc: false }], []);
 
   const handleEdit = (row: any) => {
     setEditableValues({ ...row.original });
-    setIsOpen(true);
+    setIsEditModalOpen(true);
   };
 
   const renderOptions = (row: any) => {
@@ -52,7 +49,7 @@ export const Table: React.FC<TableProps> = ({ data = [] }) => {
     );
   };
 
-  const columns = useMemo<any>(
+  const columns = useMemo<Column<any>[]>(
     () => [
       {
         Header: '№',
@@ -92,9 +89,9 @@ export const Table: React.FC<TableProps> = ({ data = [] }) => {
       },
       {
         Header: 'Options',
-        accessor: 'edit',
+        accessor: 'options',
         disableSortBy: true,
-        Cell: ({ row }: { row: any }) => renderOptions(row),
+        Cell: ({ row }: { row: Row }) => renderOptions(row),
       },
     ],
     [],
@@ -142,11 +139,11 @@ export const Table: React.FC<TableProps> = ({ data = [] }) => {
             ))}
           </thead>
           <tbody {...getTableBodyProps()}>
-            {page.map((row: any, i: number) => {
+            {page.map((row: any) => {
               prepareRow(row);
               return (
                 <tr {...row.getRowProps()}>
-                  {row.cells.map((cell: any) => {
+                  {row.cells.map((cell: Cell) => {
                     return <td {...cell.getCellProps()}>{cell.render('Cell')}</td>;
                   })}
                 </tr>
@@ -154,7 +151,7 @@ export const Table: React.FC<TableProps> = ({ data = [] }) => {
             })}
           </tbody>
         </table>
-        <Pagination>
+        <OptionsWrapper>
           <Button onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
             {'<<'}
           </Button>{' '}
@@ -198,26 +195,28 @@ export const Table: React.FC<TableProps> = ({ data = [] }) => {
             ))}
           </StyledSelect>
           <Button
-            onClick={() => setIsAddOpen(true)}
+            onClick={() => setIsAddModalOpen(true)}
             style={{
               height: '20px',
               maxWidth: '80px',
             }}>
             Add +
           </Button>
-        </Pagination>
+        </OptionsWrapper>
       </Styles>
       {editableValues && (
         <AddOrEditModal
-          isOpen={isOpen}
-          handleClose={handleClose}
+          isOpen={isEditModalOpen}
+          handleClose={handleEditModalClose}
           mode={ModalMode.edit}
           values={editableValues}
-          id={editableValues.id}
-          rowNumber={editableValues.rowNumber}
         />
       )}
-      <AddOrEditModal isOpen={isAddOpen} handleClose={handleAddClose} mode={ModalMode.add} />
+      <AddOrEditModal
+        isOpen={isAddModalOpen}
+        handleClose={handleAddModalClose}
+        mode={ModalMode.add}
+      />
     </>
   );
 };

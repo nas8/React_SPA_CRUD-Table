@@ -28,18 +28,22 @@ export const Styles = styled.div`
     }
 
     th {
-      background: #656b71;
+      background-color: #3d84d5;
       color: white;
       font-weight: 400;
-      border-radius: 5px;
 
       margin: 0;
       padding: 0.5rem;
       border-bottom: 1px solid #d8d8df;
       border-right: 1px solid #d8d8df;
 
+      :first-child {
+        border-top-left-radius: 5px;
+      }
+
       :last-child {
         border-right: 0;
+        border-top-right-radius: 5px;
       }
     }
 
@@ -70,7 +74,7 @@ export const Styles = styled.div`
   }
 `;
 
-export const Pagination = styled.div`
+export const OptionsWrapper = styled.div`
   position: fixed;
   height: 55px;
   left: 0;
@@ -92,6 +96,7 @@ export const GoToPageWrapper = styled.div`
 `;
 
 export const StyledSelect = styled.select`
+  margin-right: 10px;
   min-height: 2.5rem;
   font-size: 14px;
   border-radius: 8px;

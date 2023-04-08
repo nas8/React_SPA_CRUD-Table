@@ -1,4 +1,10 @@
-import { tableDataApi } from '../tableDataApi';
+import { IResponseItem, tableDataApi } from '../tableDataApi';
+
+export interface IPostResponseResult {
+  error_code: number;
+  error_message: string;
+  data: IResponseItem;
+}
 
 export default tableDataApi.injectEndpoints({
   endpoints: (build) => ({

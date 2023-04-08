@@ -1,32 +1,22 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { TABLE_DATA_API } from '../api/table-data';
+import { IResponseItem, TABLE_DATA_API } from '../api/table-data';
 import type { RootState } from './store';
 import { RequestStatus } from '../types/requestStatuses';
 import { formatISODate } from '../utils/formatISODate';
+import { IGetResponseResult } from '../api/table-data/GET/getTableData';
+import { IPostResponseResult } from '../api/table-data/POST/postTableItem';
+import { IPutResponseResult } from '../api/table-data/PUT/putTableItem';
 
 interface tableSliceState {
   getDataStatus: string;
   postDataStatus: string;
   putDataStatus: string;
   deleteDataStatus: string;
-  tableData: Row[] | [];
+  tableData: NumberedItem[];
 }
 
-export interface Row {
+export interface NumberedItem extends IResponseItem {
   rowNumber: number;
-  id: string;
-  documentStatus: string;
-  employeeNumber: string;
-  documentType: string;
-  documentName: string;
-  companySignatureName: string;
-  employeeSignatureName: string;
-  employeeSigDate: string;
-  companySigDate: string;
-}
-
-interface Data {
-  data: Row[];
 }
 
 const initialState: tableSliceState = {
@@ -51,23 +41,24 @@ export const tableSlice = createSlice({
     builder.addMatcher(TABLE_DATA_API.getTableData.matchPending, (state, { payload }) => {
       state.getDataStatus = RequestStatus.LOADING;
     });
-    builder.addMatcher(TABLE_DATA_API.getTableData.matchFulfilled, (state, { payload }) => {
-      const { data }: Data = payload;
+    builder.addMatcher(
+      TABLE_DATA_API.getTableData.matchFulfilled,
+      (state, { payload }: { payload: IGetResponseResult }) => {
+        const { data } = payload;
 
-      const formattedData = data.map((row: Row, index) => {
-        const newRow = { ...row };
+        const formattedData = data.map((row, index) => {
+          const newRow: NumberedItem = { ...row, rowNumber: index + 1 };
 
-        newRow.rowNumber = index + 1;
+          newRow.companySigDate = formatISODate(row.companySigDate);
+          newRow.employeeSigDate = formatISODate(row.employeeSigDate);
 
-        newRow.companySigDate = formatISODate(row.companySigDate);
-        newRow.employeeSigDate = formatISODate(row.employeeSigDate);
+          return newRow;
+        });
 
-        return newRow;
-      });
-
-      state.tableData = [...formattedData];
-      state.getDataStatus = RequestStatus.SUCCESS;
-    });
+        state.tableData = [...formattedData];
+        state.getDataStatus = RequestStatus.SUCCESS;
+      },
+    );
     builder.addMatcher(TABLE_DATA_API.getTableData.matchRejected, (state, { payload }) => {
       state.getDataStatus = RequestStatus.ERROR;
     });
@@ -75,17 +66,19 @@ export const tableSlice = createSlice({
     builder.addMatcher(TABLE_DATA_API.postTableData.matchPending, (state, { payload }) => {
       state.postDataStatus = RequestStatus.LOADING;
     });
-    builder.addMatcher(TABLE_DATA_API.postTableData.matchFulfilled, (state, { payload }) => {
-      const { data }: Data = payload;
-      const newRow: any = { ...data };
+    builder.addMatcher(
+      TABLE_DATA_API.postTableData.matchFulfilled,
+      (state, { payload }: { payload: IPostResponseResult }) => {
+        const { data } = payload;
+        const newRow: NumberedItem = { ...data, rowNumber: state.tableData.length + 1 };
 
-      newRow.rowNumber = state.tableData.length + 1;
-      newRow.companySigDate = formatISODate(newRow.companySigDate);
-      newRow.employeeSigDate = formatISODate(newRow.employeeSigDate);
+        newRow.companySigDate = formatISODate(newRow.companySigDate);
+        newRow.employeeSigDate = formatISODate(newRow.employeeSigDate);
 
-      state.tableData = [newRow, ...state.tableData];
-      state.postDataStatus = RequestStatus.SUCCESS;
-    });
+        state.tableData = [newRow, ...state.tableData];
+        state.postDataStatus = RequestStatus.SUCCESS;
+      },
+    );
     builder.addMatcher(TABLE_DATA_API.postTableData.matchRejected, (state, { payload }) => {
       state.postDataStatus = RequestStatus.ERROR;
     });
@@ -106,23 +99,25 @@ export const tableSlice = createSlice({
     builder.addMatcher(TABLE_DATA_API.putTableData.matchPending, (state, { payload }) => {
       state.putDataStatus = RequestStatus.LOADING;
     });
-    builder.addMatcher(TABLE_DATA_API.putTableData.matchFulfilled, (state, { payload }) => {
-      const { data }: any = payload;
-      const updatedData = state.tableData.map((item) => {
-        if (item.id === data.id) {
-          const updatedItem = { ...data };
-          updatedItem.companySigDate = formatISODate(data.companySigDate);
-          updatedItem.employeeSigDate = formatISODate(data.employeeSigDate);
-          updatedItem.rowNumber = item.rowNumber;
+    builder.addMatcher(
+      TABLE_DATA_API.putTableData.matchFulfilled,
+      (state, { payload }: { payload: IPutResponseResult }) => {
+        const { data } = payload;
+        const updatedData = state.tableData.map((item) => {
+          if (item.id === data.id) {
+            const updatedItem: NumberedItem = { ...data, rowNumber: item.rowNumber };
+            updatedItem.companySigDate = formatISODate(data.companySigDate);
+            updatedItem.employeeSigDate = formatISODate(data.employeeSigDate);
 
-          return updatedItem;
-        }
-        return item;
-      });
+            return updatedItem;
+          }
+          return item;
+        });
 
-      state.tableData = [...updatedData];
-      state.putDataStatus = RequestStatus.SUCCESS;
-    });
+        state.tableData = [...updatedData];
+        state.putDataStatus = RequestStatus.SUCCESS;
+      },
+    );
     builder.addMatcher(TABLE_DATA_API.putTableData.matchRejected, (state, { payload }) => {
       state.putDataStatus = RequestStatus.ERROR;
     });
