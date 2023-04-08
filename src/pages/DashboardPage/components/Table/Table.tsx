@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useTable, Column, usePagination, useSortBy, Cell, Row } from 'react-table';
 import { Button, Input, IconButton } from '@mui/joy';
 import { GoToPageWrapper, OptionsWrapper, StyledSelect, Styles } from './Table.styled';
@@ -15,39 +15,43 @@ interface TableProps {
 export const Table: React.FC<TableProps> = ({ data = [] }) => {
   const token = localStorage.getItem('token');
   const [deleteItem] = TABLE_DATA_API.deleteTableData.useMutation();
-
   const [editableValues, setEditableValues] = useState<NumberedItem | null>(null);
-
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const handleEditModalClose = () => setIsEditModalOpen(false);
   const handleAddModalClose = () => setIsAddModalOpen(false);
 
-  const handleDelete = async (row: any) => {
-    const { id } = row.original;
+  const handleDelete = useCallback(
+    async (row: any) => {
+      const { id } = row.original;
 
-    await deleteItem({ id: id, token: token });
-  };
+      await deleteItem({ id: id, token: token });
+    },
+    [deleteItem, token],
+  );
 
   const initialSortBy = useMemo(() => [{ id: 'rowNumber', desc: false }], []);
 
-  const handleEdit = (row: any) => {
+  const handleEdit = useCallback((row: any) => {
     setEditableValues({ ...row.original });
     setIsEditModalOpen(true);
-  };
+  }, []);
 
-  const renderOptions = (row: any) => {
-    return (
-      <div style={{ display: 'flex', gap: '5px' }}>
-        <IconButton variant="plain" onClick={() => handleEdit(row)}>
-          <EditIcon />
-        </IconButton>
-        <IconButton onClick={() => handleDelete(row)} color="danger" variant="plain">
-          <DeleteIcon />
-        </IconButton>
-      </div>
-    );
-  };
+  const renderOptions = useCallback(
+    (row: any) => {
+      return (
+        <div style={{ display: 'flex', gap: '5px' }}>
+          <IconButton variant="plain" onClick={() => handleEdit(row)}>
+            <EditIcon />
+          </IconButton>
+          <IconButton onClick={() => handleDelete(row)} color="danger" variant="plain">
+            <DeleteIcon />
+          </IconButton>
+        </div>
+      );
+    },
+    [handleEdit, handleDelete],
+  );
 
   const columns = useMemo<Column<any>[]>(
     () => [
@@ -94,7 +98,7 @@ export const Table: React.FC<TableProps> = ({ data = [] }) => {
         Cell: ({ row }: { row: Row }) => renderOptions(row),
       },
     ],
-    [],
+    [renderOptions],
   );
 
   const {

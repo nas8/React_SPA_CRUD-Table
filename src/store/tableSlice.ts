@@ -1,4 +1,4 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, current } from '@reduxjs/toolkit';
 import { IResponseItem, TABLE_DATA_API } from '../api/table-data';
 import type { RootState } from './store';
 import { RequestStatus } from '../types/requestStatuses';
@@ -30,12 +30,7 @@ const initialState: tableSliceState = {
 export const tableSlice = createSlice({
   name: 'table',
   initialState,
-  reducers: {
-    clearStatuses: (state, action) => {
-      state.postDataStatus = RequestStatus.IDLE;
-      state.putDataStatus = RequestStatus.IDLE;
-    },
-  },
+  reducers: {},
   extraReducers: (builder) => {
     //GET DATA
     builder.addMatcher(TABLE_DATA_API.getTableData.matchPending, (state, { payload }) => {
@@ -69,8 +64,16 @@ export const tableSlice = createSlice({
     builder.addMatcher(
       TABLE_DATA_API.postTableData.matchFulfilled,
       (state, { payload }: { payload: IPostResponseResult }) => {
+        let maxRowNumber = 0;
+
+        current(state).tableData.forEach((el) => {
+          if (el.rowNumber > maxRowNumber) {
+            maxRowNumber = el.rowNumber;
+          }
+        });
+
         const { data } = payload;
-        const newRow: NumberedItem = { ...data, rowNumber: state.tableData.length + 1 };
+        const newRow: NumberedItem = { ...data, rowNumber: maxRowNumber + 1 };
 
         newRow.companySigDate = formatISODate(newRow.companySigDate);
         newRow.employeeSigDate = formatISODate(newRow.employeeSigDate);
@@ -103,6 +106,7 @@ export const tableSlice = createSlice({
       TABLE_DATA_API.putTableData.matchFulfilled,
       (state, { payload }: { payload: IPutResponseResult }) => {
         const { data } = payload;
+
         const updatedData = state.tableData.map((item) => {
           if (item.id === data.id) {
             const updatedItem: NumberedItem = { ...data, rowNumber: item.rowNumber };
@@ -123,8 +127,6 @@ export const tableSlice = createSlice({
     });
   },
 });
-
-export const { clearStatuses } = tableSlice.actions;
 
 export const selectTableData = (state: RootState) => state.tableSlice;
 

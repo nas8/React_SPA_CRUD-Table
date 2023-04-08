@@ -1,8 +1,9 @@
 import { useContext, useState } from 'react';
-import { StyledForm, ErrorWrapper } from './LoginPage.styled';
+import { StyledForm } from './LoginPage.styled';
 import { LOGIN_API } from '../../api/login';
 import { Button, Input } from '@mui/joy';
 import { AuthContext } from '../../context/AuthContext';
+import { ErrorMessage } from '../../ui/ErrorMessage/ErrorMessage';
 
 export const LoginPage = () => {
   const [username, setUsername] = useState('');
@@ -60,8 +61,8 @@ export const LoginPage = () => {
         <Button type="submit" loading={isLoading}>
           Login
         </Button>
-        {isError && <ErrorWrapper>Server error</ErrorWrapper>}
-        {isAccessDenied && <ErrorWrapper>Wrong username or password</ErrorWrapper>}
+        {isError && <ErrorMessage message="Server response error"></ErrorMessage>}
+        {isAccessDenied && <ErrorMessage message="Wrong username or password"></ErrorMessage>}
       </StyledForm>
     </div>
   );
