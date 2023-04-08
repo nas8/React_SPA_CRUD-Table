@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/Test-app-for-Pryaniky/static/css/main.86331914.css",
+    "main.js": "/Test-app-for-Pryaniky/static/js/main.e03707a3.js",
+    "index.html": "/Test-app-for-Pryaniky/index.html",
+    "main.86331914.css.map": "/Test-app-for-Pryaniky/static/css/main.86331914.css.map",
+    "main.e03707a3.js.map": "/Test-app-for-Pryaniky/static/js/main.e03707a3.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.86331914.css",
+    "static/js/main.e03707a3.js"
+  ]
+}
