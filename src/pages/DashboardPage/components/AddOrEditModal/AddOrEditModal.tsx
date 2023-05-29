@@ -10,6 +10,7 @@ import { selectTableData } from '../../../../store/tableSlice';
 import { RequestStatus } from '../../../../types/requestStatuses';
 import { ErrorMessage } from '../../../../ui/ErrorMessage/ErrorMessage';
 import { NumberedItem } from '../../../../store/tableSlice';
+import { InputsGroup } from './components/InputsGroup';
 
 const style = {
   position: 'absolute' as 'absolute',
@@ -58,14 +59,7 @@ export const AddOrEditModal: React.FC<AddOrEditModalProps> = ({
   const [postItem] = TABLE_DATA_API.postTableData.useMutation();
   const [putItem] = TABLE_DATA_API.putTableData.useMutation();
 
-  const [documentStatus, setDocumentStatus] = useState('');
-  const [employeeNumber, setEmployeeNumber] = useState('');
-  const [documentType, setDocumentType] = useState('');
-  const [documentName, setDocumentName] = useState('');
-  const [companyName, setCompanyName] = useState('');
-  const [employeeName, setEmployeeName] = useState('');
-  const [employeeDate, setEmployeeDate] = useState('');
-  const [companyDate, setCompanyDate] = useState('');
+  const [inputsState, setInputsState] = useState<NumberedItem>(initValuesState);
 
   const [showPostError, setShowPostError] = useState(false);
   const [showPutError, setShowPutError] = useState(false);
@@ -74,14 +68,11 @@ export const AddOrEditModal: React.FC<AddOrEditModalProps> = ({
 
   useEffect(() => {
     if (values) {
-      setDocumentStatus(values.documentStatus);
-      setEmployeeNumber(values.employeeNumber);
-      setDocumentType(values.documentType);
-      setDocumentName(values.documentName);
-      setCompanyName(values.companySignatureName);
-      setEmployeeName(values.employeeSignatureName);
-      setEmployeeDate(formatDate(values.employeeSigDate));
-      setCompanyDate(formatDate(values.companySigDate));
+      setInputsState({
+        ...values,
+        employeeSigDate: formatDate(values.employeeSigDate),
+        companySigDate: formatDate(values.companySigDate),
+      });
     }
   }, [values]);
 
@@ -90,15 +81,15 @@ export const AddOrEditModal: React.FC<AddOrEditModalProps> = ({
 
     const { id, rowNumber, ...newRow } = initValuesState;
 
-    newRow.documentStatus = documentStatus;
-    newRow.employeeNumber = employeeNumber;
-    newRow.documentType = documentType;
-    newRow.documentName = documentName;
-    newRow.companySignatureName = companyName;
-    newRow.employeeSignatureName = employeeName;
-    if (employeeDate && companyDate) {
-      const formattedEmployeeDate = new Date(employeeDate);
-      const formattedCompanyDate = new Date(companyDate);
+    newRow.documentStatus = inputsState.documentStatus;
+    newRow.employeeNumber = inputsState.employeeNumber;
+    newRow.documentType = inputsState.documentType;
+    newRow.documentName = inputsState.documentName;
+    newRow.companySignatureName = inputsState.companySignatureName;
+    newRow.employeeSignatureName = inputsState.employeeSignatureName;
+    if (inputsState.employeeSigDate && inputsState.companySigDate) {
+      const formattedEmployeeDate = new Date(inputsState.employeeSigDate);
+      const formattedCompanyDate = new Date(inputsState.companySigDate);
 
       newRow.employeeSigDate = formattedEmployeeDate.toISOString();
       newRow.companySigDate = formattedCompanyDate.toISOString();
@@ -114,14 +105,7 @@ export const AddOrEditModal: React.FC<AddOrEditModalProps> = ({
 
       if (response.data) {
         closeModal();
-        setDocumentStatus('');
-        setEmployeeNumber('');
-        setDocumentType('');
-        setDocumentName('');
-        setCompanyName('');
-        setEmployeeName('');
-        setEmployeeDate('');
-        setCompanyDate('');
+        setInputsState(initValuesState);
       }
 
       if (response.error) {
@@ -170,70 +154,7 @@ export const AddOrEditModal: React.FC<AddOrEditModalProps> = ({
             </Typography>
             <div
               style={{ display: 'flex', gap: '30px', flexDirection: 'column', fontSize: '14px' }}>
-              <div style={{ display: 'flex', gap: '15px' }}>
-                <div style={{ display: 'flex', gap: '7px', flexDirection: 'column' }}>
-                  <span>Document status:</span>
-                  <Input
-                    placeholder="Document status"
-                    required
-                    value={documentStatus}
-                    onChange={(e) => setDocumentStatus(e.target.value)}
-                  />
-                  <span>Employee number:</span>
-                  <Input
-                    placeholder="Employee number"
-                    required
-                    value={employeeNumber}
-                    onChange={(e) => setEmployeeNumber(e.target.value)}
-                  />
-                  <span>Document type:</span>
-                  <Input
-                    placeholder="Document type"
-                    required
-                    value={documentType}
-                    onChange={(e) => setDocumentType(e.target.value)}
-                  />
-                  <span>Document name:</span>
-                  <Input
-                    placeholder="Document name"
-                    required
-                    value={documentName}
-                    onChange={(e) => setDocumentName(e.target.value)}
-                  />
-                </div>
-                <div style={{ display: 'flex', gap: '7px', flexDirection: 'column' }}>
-                  <span>Company name:</span>
-                  <Input
-                    placeholder="Company name"
-                    required
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                  />
-                  <span>Employee name:</span>
-                  <Input
-                    placeholder="Employee name"
-                    required
-                    value={employeeName}
-                    onChange={(e) => setEmployeeName(e.target.value)}
-                  />
-                  <span>Employee date:</span>
-                  <Input
-                    type="date"
-                    placeholder="Employee date"
-                    required
-                    value={employeeDate}
-                    onChange={(e) => setEmployeeDate(e.target.value)}
-                  />
-                  <span>Company date:</span>
-                  <Input
-                    type="date"
-                    placeholder="Company date"
-                    required
-                    value={companyDate}
-                    onChange={(e) => setCompanyDate(e.target.value)}
-                  />
-                </div>
-              </div>
+              <InputsGroup inputsState={inputsState} setInputsState={setInputsState}></InputsGroup>
               <Button
                 loading={
                   postDataStatus === RequestStatus.LOADING ||
