@@ -41,7 +41,7 @@ export const InputsGroup: React.FC<InputsGroupProps> = ({ inputsState, setInputs
           onChange={(e) => setInputsState({ ...inputsState, documentName: e.target.value })}
         />
       </InputsWrapper>
-      <InputsWrapper style={{ display: 'flex', gap: '7px', flexDirection: 'column' }}>
+      <InputsWrapper>
         <span>Company name:</span>
         <Input
           placeholder="Company name"

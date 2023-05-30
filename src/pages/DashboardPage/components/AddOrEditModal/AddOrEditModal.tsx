@@ -1,28 +1,14 @@
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Modal from '@mui/material/Modal';
-import { Button, Input } from '@mui/joy';
 import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { Typography, Modal } from '@mui/material';
+import { Button } from '@mui/joy';
 import { TABLE_DATA_API } from '../../../../api/table-data';
 import { formatDate } from '../../../../utils/formatDate';
-import { useSelector } from 'react-redux';
-import { selectTableData } from '../../../../store/tableSlice';
+import { selectTableData, NumberedItem } from '../../../../store/tableSlice';
 import { RequestStatus } from '../../../../types/requestStatuses';
 import { ErrorMessage } from '../../../../ui/ErrorMessage/ErrorMessage';
-import { NumberedItem } from '../../../../store/tableSlice';
 import { InputsGroup } from './components/InputsGroup';
-
-const style = {
-  position: 'absolute' as 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  maxWidth: 1000,
-  bgcolor: 'background.paper',
-  boxShadow: 24,
-  borderRadius: 5,
-  p: 4,
-};
+import { ContentWrapper, StyledForm } from './AddOrEditModal.styled';
 
 interface AddOrEditModalProps {
   isOpen: boolean;
@@ -59,8 +45,7 @@ export const AddOrEditModal: React.FC<AddOrEditModalProps> = ({
   const [postItem] = TABLE_DATA_API.postTableData.useMutation();
   const [putItem] = TABLE_DATA_API.putTableData.useMutation();
 
-  const [inputsState, setInputsState] = useState<NumberedItem>(initValuesState);
-
+  const [inputsState, setInputsState] = useState<NumberedItem>(values);
   const [showPostError, setShowPostError] = useState(false);
   const [showPutError, setShowPutError] = useState(false);
 
@@ -76,41 +61,30 @@ export const AddOrEditModal: React.FC<AddOrEditModalProps> = ({
     }
   }, [values]);
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const { id, rowNumber, ...newRow } = initValuesState;
-
-    newRow.documentStatus = inputsState.documentStatus;
-    newRow.employeeNumber = inputsState.employeeNumber;
-    newRow.documentType = inputsState.documentType;
-    newRow.documentName = inputsState.documentName;
-    newRow.companySignatureName = inputsState.companySignatureName;
-    newRow.employeeSignatureName = inputsState.employeeSignatureName;
-    if (inputsState.employeeSigDate && inputsState.companySigDate) {
-      const formattedEmployeeDate = new Date(inputsState.employeeSigDate);
-      const formattedCompanyDate = new Date(inputsState.companySigDate);
-
-      newRow.employeeSigDate = formattedEmployeeDate.toISOString();
-      newRow.companySigDate = formattedCompanyDate.toISOString();
-    }
+    const { id, rowNumber, ...newRow } = inputsState;
 
     if (mode === ModalMode.add) {
       const postData = {
         token: token,
-        item: { ...newRow },
+        item: {
+          ...newRow,
+          employeeSigDate: new Date(inputsState.employeeSigDate).toISOString(),
+          companySigDate: new Date(inputsState.employeeSigDate).toISOString(),
+        },
       };
 
-      const response: any = await postItem(postData);
+      const response = await postItem(postData);
 
-      if (response.data) {
+      if ('data' in response) {
         closeModal();
         setInputsState(initValuesState);
+        return;
       }
 
-      if (response.error) {
-        setShowPostError(true);
-      }
+      setShowPostError(true);
     }
 
     if (mode === ModalMode.edit) {
@@ -120,15 +94,14 @@ export const AddOrEditModal: React.FC<AddOrEditModalProps> = ({
         id: values.id,
       };
 
-      const response: any = await putItem(putData);
+      const response = await putItem(putData);
 
-      if (response.data) {
+      if ('data' in response) {
         closeModal();
+        return;
       }
 
-      if (response.error) {
-        setShowPutError(true);
-      }
+      setShowPutError(true);
     }
   };
 
@@ -139,36 +112,28 @@ export const AddOrEditModal: React.FC<AddOrEditModalProps> = ({
   };
 
   return (
-    <div>
-      <Modal
-        open={isOpen}
-        onClose={closeModal}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description">
-        <Box sx={style}>
-          <form
-            onSubmit={handleSubmit}
-            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-            <Typography id="modal-modal-title" variant="h5" component="h2">
-              {mode === ModalMode.add ? 'Add new row' : `Edit row №${values.rowNumber}`}
-            </Typography>
-            <div
-              style={{ display: 'flex', gap: '30px', flexDirection: 'column', fontSize: '14px' }}>
-              <InputsGroup inputsState={inputsState} setInputsState={setInputsState}></InputsGroup>
-              <Button
-                loading={
-                  postDataStatus === RequestStatus.LOADING ||
-                  putDataStatus === RequestStatus.LOADING
-                }
-                type="submit">
-                {mode === ModalMode.add ? 'Add' : 'Edit'}
-              </Button>
-              {showPostError && <ErrorMessage message="Failed to add new row, server error :(" />}
-              {showPutError && <ErrorMessage message="Failed to update row, server error :(" />}
-            </div>
-          </form>
-        </Box>
-      </Modal>
-    </div>
+    <Modal
+      open={isOpen}
+      onClose={closeModal}
+      aria-labelledby="modal-modal-title"
+      aria-describedby="modal-modal-description">
+      <StyledForm onSubmit={handleSubmit}>
+        <Typography id="modal-modal-title" variant="h5" component="h2">
+          {mode === ModalMode.add ? 'Add new row' : `Edit row №${values.rowNumber}`}
+        </Typography>
+        <ContentWrapper>
+          <InputsGroup inputsState={inputsState} setInputsState={setInputsState}></InputsGroup>
+          <Button
+            loading={
+              postDataStatus === RequestStatus.LOADING || putDataStatus === RequestStatus.LOADING
+            }
+            type="submit">
+            {mode === ModalMode.add ? 'Add' : 'Edit'}
+          </Button>
+          {showPostError && <ErrorMessage message="Failed to add new row, server error :(" />}
+          {showPutError && <ErrorMessage message="Failed to update row, server error :(" />}
+        </ContentWrapper>
+      </StyledForm>
+    </Modal>
   );
 };

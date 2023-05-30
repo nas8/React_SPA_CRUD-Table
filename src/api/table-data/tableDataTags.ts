@@ -1,4 +1,3 @@
-export {};
 export enum TableDataTags {
   TableDataTags = 'TableDataTags',
 }

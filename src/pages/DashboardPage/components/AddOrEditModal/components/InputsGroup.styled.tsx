@@ -6,7 +6,7 @@ export const Container = styled.div`
 `;
 
 export const InputsWrapper = styled.div`
-  display: 'flex';
-  gap: '7px';
-  flex-direction: 'column';
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
 `;
