@@ -1,4 +1,4 @@
-# Test App for Pryaniky.com
+# Simple React SPA
 
 A simple application with authorization and a table with data. Implemented CRUD operations for data
 ## Tech Stack:
