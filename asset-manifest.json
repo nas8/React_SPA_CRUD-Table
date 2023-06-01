@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/Test-app-for-Pryaniky/static/css/main.86331914.css",
-    "main.js": "/Test-app-for-Pryaniky/static/js/main.e03707a3.js",
-    "index.html": "/Test-app-for-Pryaniky/index.html",
-    "main.86331914.css.map": "/Test-app-for-Pryaniky/static/css/main.86331914.css.map",
-    "main.e03707a3.js.map": "/Test-app-for-Pryaniky/static/js/main.e03707a3.js.map"
+    "main.css": "/React_SPA_CRUD-Table/static/css/main.86331914.css",
+    "main.js": "/React_SPA_CRUD-Table/static/js/main.82824ae3.js",
+    "index.html": "/React_SPA_CRUD-Table/index.html",
+    "main.86331914.css.map": "/React_SPA_CRUD-Table/static/css/main.86331914.css.map",
+    "main.82824ae3.js.map": "/React_SPA_CRUD-Table/static/js/main.82824ae3.js.map"
   },
   "entrypoints": [
     "static/css/main.86331914.css",
-    "static/js/main.e03707a3.js"
+    "static/js/main.82824ae3.js"
   ]
 }
