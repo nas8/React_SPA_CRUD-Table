@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTable, usePagination, useSortBy, Cell } from 'react-table';
 import { Styles } from './Table.styled';
 import { NumberedItem } from '../../../../store/tableSlice';
@@ -7,7 +7,6 @@ import { AddOrEditModal } from '../AddOrEditModal/AddOrEditModal';
 import { OptionsBar } from './components/OptionsBar/OptionsBar';
 import { initValuesState, ModalMode } from '../AddOrEditModal/AddOrEditModal.utils';
 import { deriveColumns } from './Table.utils';
-
 interface TableProps {
   data: NumberedItem[];
 }
@@ -17,6 +16,8 @@ export const Table: React.FC<TableProps> = ({ data = [] }) => {
   const [deleteItem] = TABLE_DATA_API.deleteTableData.useMutation();
   const [editableValues, setEditableValues] = useState<NumberedItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const currentPage = Number(localStorage.getItem('currentPage'));
+  const isDescSort = Boolean(Number(localStorage.getItem('isDescSort')));
 
   const handleAdd = () => {
     setEditableValues(null);
@@ -42,8 +43,6 @@ export const Table: React.FC<TableProps> = ({ data = [] }) => {
     [handleEdit, handleDelete],
   );
 
-  const initialSortBy = useMemo(() => [{ id: 'rowNumber', desc: false }], []);
-
   const {
     getTableProps,
     getTableBodyProps,
@@ -58,16 +57,28 @@ export const Table: React.FC<TableProps> = ({ data = [] }) => {
     nextPage,
     previousPage,
     setPageSize,
-    state: { pageIndex, pageSize },
+    state: { pageIndex, pageSize, sortBy },
   } = useTable(
     {
       columns: tableColumns,
       data,
-      initialState: { pageIndex: 0, sortBy: initialSortBy },
+      initialState: { pageIndex: currentPage, sortBy: [{ id: 'rowNumber', desc: isDescSort }] },
     },
     useSortBy,
     usePagination,
   );
+
+  useEffect(() => {
+    localStorage.setItem('currentPage', pageIndex.toString());
+  }, [pageIndex]);
+
+  useEffect(() => {
+    if (sortBy.length > 0) {
+      const [sort] = sortBy;
+
+      localStorage.setItem('isDescSort', sort.desc ? '1' : '0');
+    }
+  }, [sortBy]);
 
   return (
     <>

@@ -24,7 +24,7 @@ const Header = () => {
   return (
     <StyledHeader>
       <HeaderInner>
-        <p style={{ color: 'white', fontWeight: '700' }}>Pryaniky.com</p>
+        <p style={{ color: 'white', fontWeight: '700' }}>LOGO</p>
         <Button
           style={{ padding: '4px 8px' }}
           onClick={handleSubmit}
