@@ -9,37 +9,20 @@ import { RequestStatus } from '../../../../types/requestStatuses';
 import { ErrorMessage } from '../../../../ui/ErrorMessage/ErrorMessage';
 import { InputsGroup } from './components/InputsGroup';
 import { ContentWrapper, StyledForm } from './AddOrEditModal.styled';
+import { ModalMode, initValuesState } from './AddOrEditModal.utils';
 
 interface AddOrEditModalProps {
   isOpen: boolean;
   handleClose: () => void;
   mode: ModalMode;
-  values?: NumberedItem;
-}
-
-const initValuesState = {
-  companySigDate: '',
-  companySignatureName: '',
-  documentName: '',
-  documentStatus: '',
-  documentType: '',
-  employeeNumber: '',
-  employeeSigDate: '',
-  employeeSignatureName: '',
-  id: '',
-  rowNumber: 0,
-};
-
-export enum ModalMode {
-  edit = 'edit',
-  add = 'add',
+  values: NumberedItem;
 }
 
 export const AddOrEditModal: React.FC<AddOrEditModalProps> = ({
   isOpen = false,
   handleClose,
   mode,
-  values = initValuesState,
+  values,
 }) => {
   const token = localStorage.getItem('token');
   const [postItem] = TABLE_DATA_API.postTableData.useMutation();

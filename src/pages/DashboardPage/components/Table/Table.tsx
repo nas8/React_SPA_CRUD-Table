@@ -1,12 +1,12 @@
 import { useCallback, useMemo, useState } from 'react';
-import { useTable, Column, usePagination, useSortBy, Cell, Row } from 'react-table';
-import { Button, Input, IconButton } from '@mui/joy';
-import { GoToPageWrapper, OptionsWrapper, StyledSelect, Styles } from './Table.styled';
+import { useTable, usePagination, useSortBy, Cell } from 'react-table';
+import { Styles } from './Table.styled';
 import { NumberedItem } from '../../../../store/tableSlice';
 import { TABLE_DATA_API } from '../../../../api/table-data';
-import { AddOrEditModal, ModalMode } from '../AddOrEditModal/AddOrEditModal';
-import EditIcon from '@material-ui/icons/Edit';
-import DeleteIcon from '@material-ui/icons/Delete';
+import { AddOrEditModal } from '../AddOrEditModal/AddOrEditModal';
+import { OptionsBar } from './components/OptionsBar/OptionsBar';
+import { initValuesState, ModalMode } from '../AddOrEditModal/AddOrEditModal.utils';
+import { deriveColumns } from './Table.utils';
 
 interface TableProps {
   data: NumberedItem[];
@@ -16,10 +16,17 @@ export const Table: React.FC<TableProps> = ({ data = [] }) => {
   const token = localStorage.getItem('token');
   const [deleteItem] = TABLE_DATA_API.deleteTableData.useMutation();
   const [editableValues, setEditableValues] = useState<NumberedItem | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const handleEditModalClose = () => setIsEditModalOpen(false);
-  const handleAddModalClose = () => setIsAddModalOpen(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleAdd = () => {
+    setEditableValues(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = useCallback((row: any) => {
+    setEditableValues({ ...row.original });
+    setIsModalOpen(true);
+  }, []);
 
   const handleDelete = useCallback(
     async (row: any) => {
@@ -30,76 +37,12 @@ export const Table: React.FC<TableProps> = ({ data = [] }) => {
     [deleteItem, token],
   );
 
-  const initialSortBy = useMemo(() => [{ id: 'rowNumber', desc: false }], []);
-
-  const handleEdit = useCallback((row: any) => {
-    setEditableValues({ ...row.original });
-    setIsEditModalOpen(true);
-  }, []);
-
-  const renderOptions = useCallback(
-    (row: any) => {
-      return (
-        <div style={{ display: 'flex', gap: '5px' }}>
-          <IconButton variant="plain" onClick={() => handleEdit(row)}>
-            <EditIcon />
-          </IconButton>
-          <IconButton onClick={() => handleDelete(row)} color="danger" variant="plain">
-            <DeleteIcon />
-          </IconButton>
-        </div>
-      );
-    },
+  const tableColumns = useMemo(
+    () => deriveColumns({ handleAdd, handleEdit, handleDelete }),
     [handleEdit, handleDelete],
   );
 
-  const columns = useMemo<Column<any>[]>(
-    () => [
-      {
-        Header: '№',
-        accessor: 'rowNumber',
-      },
-      {
-        Header: 'Document status',
-        accessor: 'documentStatus',
-      },
-      {
-        Header: 'Employee number',
-        accessor: 'employeeNumber',
-      },
-      {
-        Header: 'Document type',
-        accessor: 'documentType',
-      },
-      {
-        Header: 'Document name',
-        accessor: 'documentName',
-      },
-      {
-        Header: 'Company name',
-        accessor: 'companySignatureName',
-      },
-      {
-        Header: 'Employee name',
-        accessor: 'employeeSignatureName',
-      },
-      {
-        Header: 'Employee date',
-        accessor: 'employeeSigDate',
-      },
-      {
-        Header: 'Company date',
-        accessor: 'companySigDate',
-      },
-      {
-        Header: 'Options',
-        accessor: 'options',
-        disableSortBy: true,
-        Cell: ({ row }: { row: Row }) => renderOptions(row),
-      },
-    ],
-    [renderOptions],
-  );
+  const initialSortBy = useMemo(() => [{ id: 'rowNumber', desc: false }], []);
 
   const {
     getTableProps,
@@ -118,7 +61,7 @@ export const Table: React.FC<TableProps> = ({ data = [] }) => {
     state: { pageIndex, pageSize },
   } = useTable(
     {
-      columns,
+      columns: tableColumns,
       data,
       initialState: { pageIndex: 0, sortBy: initialSortBy },
     },
@@ -155,71 +98,26 @@ export const Table: React.FC<TableProps> = ({ data = [] }) => {
             })}
           </tbody>
         </table>
-        <OptionsWrapper>
-          <Button onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
-            {'<<'}
-          </Button>{' '}
-          <Button onClick={() => previousPage()} disabled={!canPreviousPage}>
-            {'<'}
-          </Button>{' '}
-          <Button onClick={() => nextPage()} disabled={!canNextPage}>
-            {'>'}
-          </Button>{' '}
-          <Button onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage}>
-            {'>>'}
-          </Button>{' '}
-          <span>
-            Page{' '}
-            <strong>
-              {pageIndex + 1} of {pageOptions.length}
-            </strong>{' '}
-          </span>
-          <GoToPageWrapper>
-            | Go to page:{' '}
-            <Input
-              type="number"
-              defaultValue={pageIndex + 1}
-              onChange={(e) => {
-                const page = e.target.value ? Number(e.target.value) - 1 : 0;
-                gotoPage(page);
-              }}
-              style={{ width: '70px' }}
-            />
-          </GoToPageWrapper>{' '}
-          <StyledSelect
-            value={pageSize}
-            onChange={(e: any) => {
-              console.log(e.target.value);
-              setPageSize(Number(e.target.value));
-            }}>
-            {[5, 10, 20, 30, 40, 50].map((pageSize) => (
-              <option key={pageSize} value={pageSize}>
-                Show {pageSize}
-              </option>
-            ))}
-          </StyledSelect>
-          <Button
-            onClick={() => setIsAddModalOpen(true)}
-            style={{
-              height: '20px',
-              maxWidth: '80px',
-            }}>
-            Add +
-          </Button>
-        </OptionsWrapper>
       </Styles>
-      {editableValues && (
-        <AddOrEditModal
-          isOpen={isEditModalOpen}
-          handleClose={handleEditModalClose}
-          mode={ModalMode.edit}
-          values={editableValues}
-        />
-      )}
+
+      <OptionsBar
+        gotoPage={gotoPage}
+        previousPage={previousPage}
+        nextPage={nextPage}
+        setPageSize={setPageSize}
+        canPreviousPage={canPreviousPage}
+        canNextPage={canNextPage}
+        pageIndex={pageIndex}
+        pageLength={pageOptions.length}
+        pageSize={pageSize}
+        pageCount={pageCount}
+      />
+
       <AddOrEditModal
-        isOpen={isAddModalOpen}
-        handleClose={handleAddModalClose}
-        mode={ModalMode.add}
+        isOpen={isModalOpen}
+        handleClose={() => setIsModalOpen(false)}
+        mode={editableValues ? ModalMode.edit : ModalMode.add}
+        values={editableValues ? editableValues : initValuesState}
       />
     </>
   );
